@@ -8,12 +8,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/cions/leveldb-cli/indexeddb"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
 
 var (
-	outputMode = flag.String("output", "line", "Output mode (line,line_raw,csv,json)")
+	outputMode    = flag.String("output", "line", "Output mode (line,line_raw,csv,json)")
+	indexedDBMode = flag.Bool("i", false, "IndexedDB mode")
 )
 
 func main() {
@@ -21,12 +23,18 @@ func main() {
 
 	args := flag.Args()
 	if len(args) < 1 {
-		log.Fatalf("usage: %s <path/to/leveldb>", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s [options] <path/to/leveldb>\n", os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 
 	options := &opt.Options{
 		ErrorIfMissing: true,
 		ReadOnly:       true,
+	}
+
+	if *indexedDBMode {
+		options.Comparer = indexeddb.Comparer
 	}
 
 	db, err := leveldb.OpenFile(args[0], options)
